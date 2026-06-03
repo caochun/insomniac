@@ -13,7 +13,7 @@ class SleepMonitor {
     ]
 
     private static let systemProcesses: Set<String> = [
-        "powerd", "WindowServer", "timed", "bluetoothd", "sharingd"
+        "powerd", "WindowServer", "timed", "bluetoothd", "sharingd", "useractivityd"
     ]
 
     func checkBlockingProcesses() -> [BlockingProcess] {
