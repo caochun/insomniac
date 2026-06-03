@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -79,35 +80,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 processItem.isEnabled = false
                 menu.addItem(processItem)
 
-                let detailItem = NSMenuItem(title: "  \(process.description)", action: nil, keyEquivalent: "")
-                detailItem.isEnabled = false
-                menu.addItem(detailItem)
-
+                let submenu = NSMenu()
                 let terminateItem = NSMenuItem(
-                    title: "  Terminate",
+                    title: "Terminate",
                     action: #selector(terminateProcess(_:)),
                     keyEquivalent: ""
                 )
                 terminateItem.target = self
                 terminateItem.representedObject = process.id
-                menu.addItem(terminateItem)
+                submenu.addItem(terminateItem)
 
                 let forceTerminateItem = NSMenuItem(
-                    title: "  Force Terminate",
+                    title: "Force Terminate",
                     action: #selector(forceTerminateProcess(_:)),
                     keyEquivalent: ""
                 )
                 forceTerminateItem.target = self
                 forceTerminateItem.representedObject = process.id
-                menu.addItem(forceTerminateItem)
+                submenu.addItem(forceTerminateItem)
 
-                menu.addItem(NSMenuItem.separator())
+                processItem.submenu = submenu
+                processItem.isEnabled = true
             }
         }
 
         let refreshItem = NSMenuItem(title: "Refresh", action: #selector(refreshClicked), keyEquivalent: "r")
         refreshItem.target = self
         menu.addItem(refreshItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let launchAtLoginItem = NSMenuItem(
+            title: "Launch at Login",
+            action: #selector(toggleLaunchAtLogin(_:)),
+            keyEquivalent: ""
+        )
+        launchAtLoginItem.target = self
+        launchAtLoginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        menu.addItem(launchAtLoginItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -138,6 +148,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func refreshClicked() {
         refreshStatus()
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {}
+        buildMenu()
     }
 
     @objc private func quitApp() {
